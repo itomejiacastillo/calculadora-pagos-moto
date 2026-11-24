@@ -109,21 +109,13 @@ export default function App() {
   const [newPhoto, setNewPhoto] = useState('');
   const [createError, setCreateError] = useState('');
 
-  // Estado editable del presupuesto activo (se aplica al presionar "Actualizar")
-  const [draftName, setDraftName] = useState('');
-  const [draftPhoto, setDraftPhoto] = useState('');
-  const [draftPrice, setDraftPrice] = useState('');
-  const [draftPrima, setDraftPrima] = useState('');
-  const [draftMonths, setDraftMonths] = useState(12);
-  const [statusMessage, setStatusMessage] = useState('');
-
   // Estado para instalación PWA
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   const editFileInputRef = useRef(null);
   const createFileInputRef = useRef(null);
 
-  // Sincronizar lista de presupuestos en localStorage
+  // Sincronizar lista de presupuestos en localStorage automáticamente
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(budgets));
@@ -158,20 +150,27 @@ export default function App() {
   const activeBudget =
     budgets.find((b) => b.id === activeBudgetId) || budgets[0] || null;
 
-  // Cargar datos guardados en los campos borradores cuando cambia el presupuesto seleccionado
   useEffect(() => {
-    if (activeBudget) {
-      if (activeBudget.id !== activeBudgetId) {
-        setActiveBudgetId(activeBudget.id);
-      }
-      setDraftName(activeBudget.name);
-      setDraftPhoto(activeBudget.photo || '');
-      setDraftPrice(String(activeBudget.price));
-      setDraftPrima(String(activeBudget.downPayment ?? 0));
-      setDraftMonths(Number(activeBudget.months) || 12);
-      setStatusMessage('');
+    if (activeBudget && activeBudget.id !== activeBudgetId) {
+      setActiveBudgetId(activeBudget.id);
     }
-  }, [activeBudget?.id]);
+  }, [activeBudget?.id, activeBudgetId]);
+
+  // Función que actualiza el presupuesto activo en tiempo real y recalcula inmediatamente
+  const updateActiveBudgetFields = (patch) => {
+    if (!activeBudget) return;
+    setBudgets((prev) =>
+      prev.map((item) =>
+        item.id === activeBudget.id
+          ? {
+              ...item,
+              ...patch,
+              updatedAt: new Date().toISOString(),
+            }
+          : item
+      )
+    );
+  };
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -192,13 +191,13 @@ export default function App() {
     }
   };
 
-  // Subida de foto en pantalla de formulario
-  const handleDraftPhotoUpload = async (e) => {
+  // Subida de foto en pantalla de formulario (actualización instantánea)
+  const handleActivePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
       const squareDataUrl = await processImageToSquareDataUrl(file);
-      setDraftPhoto(squareDataUrl);
+      updateActiveBudgetFields({ photo: squareDataUrl });
     } catch {
       // Ignore invalid image
     }
@@ -242,42 +241,6 @@ export default function App() {
     setIsCreating(false);
   };
 
-  // Botón Actualizar: recalcula y guarda todos los cambios en LocalStorage
-  const handleUpdateBudget = (e) => {
-    if (e) e.preventDefault();
-    if (!activeBudget) return;
-
-    const cleanName = draftName.trim() || activeBudget.name;
-    const cleanPrice = Math.max(0, parseFloat(draftPrice) || 0);
-    const cleanPrima = Math.max(0, parseFloat(draftPrima) || 0);
-    const cleanMonths = COMMISSION_RATES[draftMonths] ? Number(draftMonths) : 12;
-
-    const updatedBudget = {
-      ...activeBudget,
-      name: cleanName,
-      photo: draftPhoto,
-      price: cleanPrice,
-      downPayment: cleanPrima,
-      months: cleanMonths,
-      updatedAt: new Date().toISOString(),
-    };
-
-    const nextBudgets = budgets.map((item) =>
-      item.id === activeBudget.id ? updatedBudget : item
-    );
-
-    setBudgets(nextBudgets);
-    setDraftName(cleanName);
-    setDraftPrice(String(cleanPrice));
-    setDraftPrima(String(cleanPrima));
-    setDraftMonths(cleanMonths);
-    setStatusMessage('Campos y cálculos actualizados en LocalStorage.');
-
-    setTimeout(() => {
-      setStatusMessage('');
-    }, 3000);
-  };
-
   const handleDeleteCurrentBudget = () => {
     if (!activeBudget) return;
     const remaining = budgets.filter((b) => b.id !== activeBudget.id);
@@ -290,23 +253,14 @@ export default function App() {
     }
   };
 
-  // Cálculos oficiales guardados en el presupuesto activo (se actualizan al pulsar "Actualizar")
-  const savedCalc = activeBudget
+  // Cálculos en tiempo real cada vez que cambia cualquier campo o plazo seleccionado
+  const liveCalc = activeBudget
     ? calculatePlan(
         activeBudget.price,
         activeBudget.downPayment,
         activeBudget.months
       )
     : calculatePlan(0, 0, 12);
-
-  // Detectar si el usuario modificó algún campo y aún no ha pulsado "Actualizar"
-  const hasUnappliedChanges =
-    activeBudget &&
-    (draftName.trim() !== activeBudget.name ||
-      draftPhoto !== (activeBudget.photo || '') ||
-      (parseFloat(draftPrice) || 0) !== Number(activeBudget.price) ||
-      (parseFloat(draftPrima) || 0) !== Number(activeBudget.downPayment) ||
-      Number(draftMonths) !== Number(activeBudget.months));
 
   return (
     <div className="app-shell">
@@ -349,7 +303,7 @@ export default function App() {
               >
                 {budgets.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.name} — {formatHNL(b.price)}
+                    {b.name || 'Sin nombre'} — {formatHNL(b.price)}
                   </option>
                 ))}
               </select>
@@ -480,18 +434,16 @@ export default function App() {
             )}
           </form>
         ) : (
-          /* Pantalla estilo formulario en bloques apilados uno sobre otro */
+          /* Pantalla estilo formulario en bloques apilados uno sobre otro con cálculo automático */
           activeBudget && (
-            <form
-              id="calculator-block-form"
-              className="block-stack"
-              onSubmit={handleUpdateBudget}
-            >
+            <div id="calculator-block-form" className="block-stack">
               {/* 1. Título: nombre de la moto o presupuesto */}
               <div className="field-block block-stack">
                 <div>
                   <span className="block-label">Título del presupuesto</span>
-                  <h1 className="budget-title-heading">{activeBudget.name}</h1>
+                  <h1 className="budget-title-heading">
+                    {activeBudget.name || 'Sin nombre'}
+                  </h1>
                 </div>
                 <div>
                   <label htmlFor="edit-budget-name" className="block-label">
@@ -501,8 +453,10 @@ export default function App() {
                     id="edit-budget-name"
                     type="text"
                     className="block-input"
-                    value={draftName}
-                    onChange={(e) => setDraftName(e.target.value)}
+                    value={activeBudget.name}
+                    onChange={(e) =>
+                      updateActiveBudgetFields({ name: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -511,8 +465,8 @@ export default function App() {
               <div className="photo-block">
                 <div className="photo-frame-1x1">
                   <img
-                    src={draftPhoto || './default-moto.svg'}
-                    alt={activeBudget.name}
+                    src={activeBudget.photo || './default-moto.svg'}
+                    alt={activeBudget.name || 'Moto'}
                   />
                 </div>
                 <div className="photo-action-wrapper block-stack">
@@ -522,7 +476,7 @@ export default function App() {
                     type="file"
                     accept="image/*"
                     className="file-input-hidden"
-                    onChange={handleDraftPhotoUpload}
+                    onChange={handleActivePhotoUpload}
                   />
                   <button
                     type="button"
@@ -530,7 +484,9 @@ export default function App() {
                     className="btn-block btn-secondary btn-sm"
                     onClick={() => editFileInputRef.current?.click()}
                   >
-                    {draftPhoto ? 'Cambiar foto de la moto' : 'Subir foto de la moto (1:1)'}
+                    {activeBudget.photo
+                      ? 'Cambiar foto de la moto'
+                      : 'Subir foto de la moto (1:1)'}
                   </button>
                 </div>
               </div>
@@ -547,11 +503,16 @@ export default function App() {
                   min="0"
                   step="0.01"
                   className="block-input"
-                  value={draftPrice}
-                  onChange={(e) => setDraftPrice(e.target.value)}
+                  placeholder="0.00"
+                  value={activeBudget.price === '' ? '' : activeBudget.price}
+                  onChange={(e) =>
+                    updateActiveBudgetFields({
+                      price: e.target.value === '' ? '' : Number(e.target.value),
+                    })
+                  }
                 />
                 <span className="block-helper">
-                  Precio actual aplicado: {formatHNL(savedCalc.price)}
+                  Precio: {formatHNL(liveCalc.price)}
                 </span>
               </div>
 
@@ -568,11 +529,20 @@ export default function App() {
                   step="0.01"
                   className="block-input"
                   placeholder="0.00"
-                  value={draftPrima}
-                  onChange={(e) => setDraftPrima(e.target.value)}
+                  value={
+                    activeBudget.downPayment === ''
+                      ? ''
+                      : activeBudget.downPayment
+                  }
+                  onChange={(e) =>
+                    updateActiveBudgetFields({
+                      downPayment:
+                        e.target.value === '' ? '' : Number(e.target.value),
+                    })
+                  }
                 />
                 <span className="block-helper">
-                  Prima actual aplicada: {formatHNL(savedCalc.downPayment)}
+                  Prima: {formatHNL(liveCalc.downPayment)}
                 </span>
               </div>
 
@@ -582,10 +552,10 @@ export default function App() {
                   Monto a financiar (Precio − Prima)
                 </span>
                 <span id="output-monto-financiar" className="currency-value">
-                  {formatHNL(savedCalc.financedAmount)}
+                  {formatHNL(liveCalc.financedAmount)}
                 </span>
                 <span className="block-helper">
-                  {formatHNL(savedCalc.price)} − {formatHNL(savedCalc.downPayment)}
+                  {formatHNL(liveCalc.price)} − {formatHNL(liveCalc.downPayment)}
                 </span>
               </div>
 
@@ -596,7 +566,7 @@ export default function App() {
                 </span>
                 <div className="months-stack">
                   {TERM_OPTIONS.map((term) => {
-                    const isSelected = Number(draftMonths) === term;
+                    const isSelected = Number(liveCalc.months) === term;
                     const ratePercent = Math.round(COMMISSION_RATES[term] * 100);
                     return (
                       <button
@@ -605,7 +575,9 @@ export default function App() {
                         id={`btn-meses-${term}`}
                         className={`month-option-btn ${isSelected ? 'selected' : ''}`}
                         aria-pressed={isSelected}
-                        onClick={() => setDraftMonths(term)}
+                        onClick={() =>
+                          updateActiveBudgetFields({ months: term })
+                        }
                       >
                         <span>{term} meses</span>
                         <span className="month-option-subtext">
@@ -620,14 +592,14 @@ export default function App() {
               {/* 7. Cuota mensual (Monto a financiar / Plazo) */}
               <div className="field-block field-block-computed">
                 <span className="block-label">
-                  Cuota mensual ({savedCalc.months} meses)
+                  Cuota mensual ({liveCalc.months} meses)
                 </span>
                 <span id="output-cuota-mensual" className="currency-value">
-                  {formatHNL(savedCalc.monthlyPayment)}
+                  {formatHNL(liveCalc.monthlyPayment)}
                 </span>
                 <span className="block-helper">
-                  Monto a financiar ({formatHNL(savedCalc.financedAmount)}) ÷{' '}
-                  {savedCalc.months} meses
+                  Monto a financiar ({formatHNL(liveCalc.financedAmount)}) ÷{' '}
+                  {liveCalc.months} meses
                 </span>
               </div>
 
@@ -635,15 +607,15 @@ export default function App() {
               <div className="field-block field-block-computed">
                 <span className="block-label">
                   Comisión de intrafinanciamiento (
-                  {Math.round(savedCalc.rate * 100)}%)
+                  {Math.round(liveCalc.rate * 100)}%)
                 </span>
                 <span id="output-comision" className="currency-value">
-                  {formatHNL(savedCalc.commission)}
+                  {formatHNL(liveCalc.commission)}
                 </span>
                 <span className="block-helper">
-                  {formatHNL(savedCalc.financedAmount)} ×{' '}
-                  {Math.round(savedCalc.rate * 100)}% (Plazo de{' '}
-                  {savedCalc.months} meses)
+                  {formatHNL(liveCalc.financedAmount)} ×{' '}
+                  {Math.round(liveCalc.rate * 100)}% (Plazo de{' '}
+                  {liveCalc.months} meses)
                 </span>
               </div>
 
@@ -656,34 +628,12 @@ export default function App() {
                   id="output-primera-cuota"
                   className="currency-value-featured"
                 >
-                  {formatHNL(savedCalc.firstPayment)}
+                  {formatHNL(liveCalc.firstPayment)}
                 </span>
                 <span className="block-helper">
-                  {formatHNL(savedCalc.commission)} (comisión) +{' '}
-                  {formatHNL(savedCalc.monthlyPayment)} (cuota)
+                  {formatHNL(liveCalc.commission)} (comisión) +{' '}
+                  {formatHNL(liveCalc.monthlyPayment)} (cuota)
                 </span>
-              </div>
-
-              {/* 10. Botón Actualizar */}
-              <div className="field-block">
-                {hasUnappliedChanges && (
-                  <span className="pending-notice">
-                    Tienes cambios realizados. Presiona &ldquo;Actualizar&rdquo;
-                    para recalcular los campos y guardar.
-                  </span>
-                )}
-                {statusMessage && (
-                  <div className="status-banner" style={{ marginBottom: '10px' }}>
-                    {statusMessage}
-                  </div>
-                )}
-                <button
-                  type="submit"
-                  id="btn-actualizar"
-                  className="btn-block btn-primary"
-                >
-                  Actualizar
-                </button>
               </div>
 
               {/* Opción para eliminar el presupuesto actual */}
@@ -697,7 +647,7 @@ export default function App() {
                   Eliminar este presupuesto
                 </button>
               </div>
-            </form>
+            </div>
           )
         )}
       </main>
