@@ -64,9 +64,6 @@ body {
   color: #ffffff;
   padding: 16px 20px;
   border-bottom: 1px solid #002855;
-  position: sticky;
-  top: 0;
-  z-index: 30;
 }
 
 .top-bar-title {
