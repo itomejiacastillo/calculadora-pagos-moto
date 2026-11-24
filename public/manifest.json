@@ -1,0 +1,26 @@
+{
+  "name": "Calculadora de Pagos de Moto",
+  "short_name": "MotoPagos",
+  "description": "Calculadora de pagos e intrafinanciamiento de motocicletas en Lempiras (HNL).",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f5f8",
+  "theme_color": "#003876",
+  "lang": "es-HN",
+  "icons": [
+    {
+      "src": "./icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

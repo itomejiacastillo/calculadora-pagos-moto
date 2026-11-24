@@ -1,0 +1,396 @@
+:root {
+  --bg-page: #f3f5f8;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f8fafc;
+  --bg-highlight: #eef4fb;
+  --border-color: #d8e0ea;
+  --border-strong: #b8c5d6;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --brand-primary: #003876;
+  --brand-primary-hover: #002855;
+  --brand-accent: #0077b6;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-text: #065f46;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-text: #b91c1c;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100dvh;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* Mobile-first container: strictly stacked single column */
+.app-shell {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background-color: var(--bg-page);
+  padding-bottom: 48px;
+}
+
+/* Header Bar */
+.top-bar {
+  background-color: var(--brand-primary);
+  color: #ffffff;
+  padding: 16px 20px;
+  border-bottom: 1px solid #002855;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.top-bar-title {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.top-bar-subtitle {
+  display: block;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  margin-top: 2px;
+}
+
+.install-banner {
+  background-color: var(--bg-highlight);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 20px;
+}
+
+.install-banner-text {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+/* Main Content Wrapper */
+.main-content {
+  padding: 16px;
+}
+
+/* Stacked Block Utilities (Strictly 1 block on top of another, no grids or side-by-side rows) */
+.block-stack > * + * {
+  margin-top: 16px;
+}
+
+.card-surface {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Budget Selector / Navigation Block */
+.selector-block {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.block-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.block-helper {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* Select & Inputs */
+.block-select,
+.block-input {
+  display: block;
+  width: 100%;
+  padding: 13px 14px;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background-color: var(--bg-subtle);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  appearance: none;
+}
+
+.block-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23334155' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+}
+
+.block-select:focus,
+.block-input:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  background-color: #ffffff;
+}
+
+/* Stacked Form Fields inside Calculator */
+.field-block {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.field-block-computed {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+}
+
+.field-block-featured {
+  background-color: var(--bg-highlight);
+  border: 1.5px solid var(--brand-primary);
+}
+
+/* 1. Title Block */
+.budget-title-heading {
+  display: block;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  word-break: break-word;
+}
+
+/* 2. Photo Block: Full width, 1:1 Aspect Ratio */
+.photo-block {
+  display: block;
+  width: 100%;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.photo-frame-1x1 {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #eef1f5;
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-frame-1x1 img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-action-wrapper {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-subtle);
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+/* Currency Values Display */
+.currency-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin-top: 2px;
+}
+
+.currency-value-featured {
+  display: block;
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+}
+
+/* Month Selection Buttons - Stacked vertically as blocks */
+.months-stack > * + * {
+  margin-top: 10px;
+}
+
+.month-option-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  background-color: var(--bg-subtle);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.month-option-btn:hover {
+  border-color: var(--border-strong);
+}
+
+.month-option-btn.selected {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #ffffff;
+}
+
+.month-option-subtext {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+
+.month-option-btn.selected .month-option-subtext {
+  color: #dbeafe;
+}
+
+/* Primary & Secondary Action Buttons (Full width blocks) */
+.btn-block {
+  display: block;
+  width: 100%;
+  padding: 15px 18px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+}
+
+.btn-block:active {
+  transform: scale(0.99);
+}
+
+.btn-primary {
+  background-color: var(--brand-primary);
+  color: #ffffff;
+  border-color: var(--brand-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-subtle);
+}
+
+.btn-danger {
+  background-color: var(--danger-bg);
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+}
+
+.btn-sm {
+  padding: 10px 14px;
+  font-size: 0.9rem;
+}
+
+/* Status Banner */
+.status-banner {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  background-color: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
+  text-align: center;
+}
+
+.pending-notice {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  margin-bottom: 10px;
+}
+
+.error-banner {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+}
