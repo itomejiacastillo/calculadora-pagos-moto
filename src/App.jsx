@@ -65,6 +65,7 @@ function calculatePlan(price, downPayment, months) {
   const monthlyPayment = safeMonths > 0 ? financedAmount / safeMonths : 0;
   const commission = financedAmount * rate;
   const firstPayment = commission + monthlyPayment;
+  const initialOutlay = safeDownPayment + commission + firstPayment;
 
   return {
     price: safePrice,
@@ -75,6 +76,7 @@ function calculatePlan(price, downPayment, months) {
     monthlyPayment,
     commission,
     firstPayment,
+    initialOutlay,
   };
 }
 
@@ -619,21 +621,45 @@ export default function App() {
                 </span>
               </div>
 
-              {/* 9. Primera cuota (Comisión + Valor de una cuota) */}
-              <div className="field-block field-block-featured">
-                <span className="block-label">
-                  Primera cuota (Comisión + 1 cuota mensual)
-                </span>
-                <span
-                  id="output-primera-cuota"
-                  className="currency-value-featured"
+              {/* 9. Primera cuota y Desembolso inicial */}
+              <div className="field-block field-block-featured block-stack">
+                <div>
+                  <span className="block-label">
+                    Primera cuota (Comisión + 1 cuota mensual)
+                  </span>
+                  <span
+                    id="output-primera-cuota"
+                    className="currency-value-featured"
+                  >
+                    {formatHNL(liveCalc.firstPayment)}
+                  </span>
+                  <span className="block-helper">
+                    {formatHNL(liveCalc.commission)} (comisión) +{' '}
+                    {formatHNL(liveCalc.monthlyPayment)} (cuota)
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    borderTop: '1px solid var(--border-color)',
+                    paddingTop: '14px',
+                  }}
                 >
-                  {formatHNL(liveCalc.firstPayment)}
-                </span>
-                <span className="block-helper">
-                  {formatHNL(liveCalc.commission)} (comisión) +{' '}
-                  {formatHNL(liveCalc.monthlyPayment)} (cuota)
-                </span>
+                  <span className="block-label">
+                    Desembolso inicial (Prima + Comisión + Primera cuota)
+                  </span>
+                  <span
+                    id="output-desembolso-inicial"
+                    className="currency-value-featured"
+                  >
+                    {formatHNL(liveCalc.initialOutlay)}
+                  </span>
+                  <span className="block-helper">
+                    {formatHNL(liveCalc.downPayment)} (prima) +{' '}
+                    {formatHNL(liveCalc.commission)} (comisión) +{' '}
+                    {formatHNL(liveCalc.firstPayment)} (primera cuota)
+                  </span>
+                </div>
               </div>
 
               {/* Opción para eliminar el presupuesto actual */}
